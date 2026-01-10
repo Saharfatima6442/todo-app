@@ -1,51 +1,55 @@
-<!--
-Sync Impact Report:
-Version change: N/A -> 1.0.0
-Modified principles: N/A
-Added sections: All principles and sections as specified
-Removed sections: N/A
-Templates requiring updates:
-- ✅ .specify/templates/plan-template.md - needs alignment
-- ✅ .specify/templates/spec-template.md - needs alignment
-- ✅ .specify/templates/tasks-template.md - needs alignment
-- ⚠ .specify/templates/commands/*.md - needs review for outdated references
-- ⚠ README.md - needs update for principles reference
-Follow-up TODOs:
-- TODO(RATIFICATION_DATE): Original adoption date unknown - needs to be set
-- TODO: Update dependent templates to align with new principles
--->
-# Todo In-Memory Console Application Constitution
+# [PROJECT_NAME] Constitution
+<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
 
 ## Core Principles
 
-### Clean Code First
-Every feature must follow clean code principles with clear separation of concerns between CLI, business logic, and data models; Code must be modular, readable, and maintainable with proper abstractions.
+### [PRINCIPLE_1_NAME]
+<!-- Example: I. Library-First -->
+[PRINCIPLE_1_DESCRIPTION]
+<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
 
-### Spec-Driven Development
-All development must strictly follow approved specifications; Specifications must be saved in the specs_history folder; Claude Code must be used to generate and evolve specifications.
+### [PRINCIPLE_2_NAME]
+<!-- Example: II. CLI Interface -->
+[PRINCIPLE_2_DESCRIPTION]
+<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
 
-### Test-First (NON-NEGOTIABLE)
-TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced for all features.
+### [PRINCIPLE_3_NAME]
+<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
+[PRINCIPLE_3_DESCRIPTION]
+<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
 
-### In-Memory Architecture
-All data must be stored in memory during runtime; No file handling, databases, or external storage allowed; Focus on core functionality without persistence concerns.
+### [PRINCIPLE_4_NAME]
+<!-- Example: IV. Integration Testing -->
+[PRINCIPLE_4_DESCRIPTION]
+<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
 
-### Console-First Interface
-Every functionality must be accessible via CLI; Menu-driven interface required; Text-based input/output protocol for all interactions.
+### [PRINCIPLE_5_NAME]
+<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
+[PRINCIPLE_5_DESCRIPTION]
+<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
 
-### Python 3.13+ Standards
-Use Python 3.13 or higher with UV for environment management; Follow modern Python coding standards and best practices.
+### [PRINCIPLE_6_NAME]
 
-## Technology Stack Requirements
 
-Python 3.13+, UV for environment management, Claude Code, Spec-Kit Plus; No third-party task management libraries; Console-only interface without GUI.
+[PRINCIPLE__DESCRIPTION]
 
-## Development Workflow
+## [SECTION_2_NAME]
+<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
 
-Spec-driven development using Spec-Kit Plus; Code must strictly follow approved specifications; All specifications must be saved in specs_history folder.
+[SECTION_2_CONTENT]
+<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+
+## [SECTION_3_NAME]
+<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+
+[SECTION_3_CONTENT]
+<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
 ## Governance
+<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-Constitution supersedes all other practices; Amendments require documentation and approval; All development must verify compliance with these principles.
+[GOVERNANCE_RULES]
+<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
 
-**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): Original adoption date unknown | **Last Amended**: 2025-12-31
+**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
+<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
