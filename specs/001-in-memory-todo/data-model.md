@@ -1,41 +1,71 @@
-# Data Model: In-Memory Todo CLI
+# Data Model: JWT Authenticated Todo Application
 
 ## Overview
-This document defines the data models for the In-Memory Todo CLI application based on the feature specification.
+This document describes the data model for the JWT authenticated todo application, including user identity and task ownership relationships.
 
-## Todo Entity
+## Entities
 
-### Fields
-- **id** (integer): Unique identifier for the todo item, automatically assigned
-- **title** (string): Title of the todo item (required)
-- **description** (string): Detailed description of the todo item (optional)
-- **completed** (boolean): Completion status of the todo item (default: false)
+### User (from JWT)
+Represents the authenticated user identity extracted from the JWT token.
 
-### Validation Rules
-- **id**: Must be unique within the application session
-- **title**: Must not be empty or null
-- **description**: Can be empty but not null
-- **completed**: Must be a boolean value (true/false)
+**Attributes:**
+- `id` (string): Unique user identifier (from JWT `sub` claim)
+- `email` (string): User's email address (from JWT `email` claim)
+- `authenticated` (boolean): Whether the user is currently authenticated
 
-### State Transitions
-- **Initial State**: When created, a Todo has `completed = false`
-- **Completed State**: When marked complete, `completed` changes to `true`
-- **Incomplete State**: When marked incomplete, `completed` changes to `false`
+**Notes:**
+- User data is not stored locally but extracted from JWT tokens
+- Authentication state is maintained via JWT validity
 
-## Todo Service
+### Todo
+Represents a task with an ID (unique identifier), title (string), description (string), completion status (boolean), and owner (user ID).
 
-### Responsibilities
-- Manage the collection of Todo items in memory
-- Provide methods to add, view, update, delete, and mark todos
-- Ensure unique IDs are assigned to each todo
-- Validate todo data before operations
+**Attributes:**
+- `id` (string): Unique identifier for the todo
+- `title` (string): Title of the task (1-100 characters)
+- `description` (string): Detailed description of the task (up to 500 characters)
+- `completed` (boolean): Whether the task is completed
+- `owner_id` (string): ID of the user who owns this task
 
-### Methods
-- **add_todo(title, description)**: Creates a new todo with a unique ID
-- **get_all_todos()**: Returns all todos
-- **get_todo_by_id(id)**: Returns a specific todo by ID
-- **update_todo(id, title, description)**: Updates an existing todo
-- **delete_todo(id)**: Removes a todo by ID
-- **mark_complete(id)**: Marks a todo as complete
-- **mark_incomplete(id)**: Marks a todo as incomplete
-- **toggle_completion(id)**: Toggles the completion status of a todo
+**Relationships:**
+- Belongs to one User (via `owner_id`)
+
+**Validation Rules:**
+- Title must be 1-100 characters
+- Description must be up to 500 characters
+- Owner ID must match the authenticated user's ID
+
+### Session
+Represents the current authenticated session state.
+
+**Attributes:**
+- `jwt_token` (string): The current JWT token
+- `expires_at` (datetime): When the token expires
+- `user_id` (string): Associated user ID
+
+## State Transitions
+
+### Todo State Transitions
+- `incomplete` → `completed`: When user marks task as complete
+- `completed` → `incomplete`: When user marks task as incomplete
+
+## Access Control Rules
+
+### Ownership Enforcement
+- A user can only access todos where `todo.owner_id` equals the user's ID from JWT
+- All API operations must validate that the authenticated user owns the resources they're accessing
+- Requests with mismatched user IDs in URL vs JWT will be rejected
+
+## Data Flow
+
+### Creation Flow
+1. User authenticates and receives JWT
+2. JWT contains user ID in `sub` claim
+3. When creating a todo, `owner_id` is set to user ID from JWT
+4. Todo is stored with ownership information
+
+### Access Flow
+1. User makes request with JWT in Authorization header
+2. Backend extracts user ID from JWT
+3. Backend verifies that requested todo's `owner_id` matches JWT's user ID
+4. Request proceeds only if ownership matches

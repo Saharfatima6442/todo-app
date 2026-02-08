@@ -1,10 +1,11 @@
 """
 REST API for the todo application using FastAPI
 """
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from typing import List, Optional
 from src.models.todo import Todo
 from src.services.todo_service import TodoService
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # Create a global instance of TodoService to maintain state across requests
@@ -12,6 +13,15 @@ from src.services.todo_service import TodoService
 todo_service = TodoService()
 
 app = FastAPI(title="Todo API", version="1.0.0")
+
+# Add CORS middleware to allow requests from the frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 
 @app.get("/")
@@ -34,14 +44,22 @@ def get_todo(todo_id: int):
     return todo
 
 
+from pydantic import BaseModel
+
+class TodoCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = None
+    completed: Optional[bool] = False
+
 @app.post("/todos", response_model=Todo)
-def create_todo(todo_data: Todo):
-    """Create a new todo"""
-    # Extract only the fields we need for creation
+def create_todo(
+    title: str = Query(...),
+    description: Optional[str] = Query(None)
+):
     try:
         new_todo = todo_service.add_todo(
-            title=todo_data.title,
-            description=todo_data.description
+            title=title,
+            description=description
         )
         return new_todo
     except ValueError as e:
@@ -49,23 +67,22 @@ def create_todo(todo_data: Todo):
 
 
 @app.put("/todos/{todo_id}", response_model=Todo)
-def update_todo(todo_id: int, title: Optional[str] = None, description: Optional[str] = None):
-    """Update an existing todo"""
-    # Check if todo exists
-    existing_todo = todo_service.get_todo_by_id(todo_id)
-    if not existing_todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    
-    # Prepare update parameters
+def update_todo(
+    todo_id: int,
+    title: Optional[str] = Query(None),
+    description: Optional[str] = Query(None)
+):
+
+    # Prepare update parameters from the request body
     update_params = {}
     if title is not None:
         update_params['title'] = title
     if description is not None:
         update_params['description'] = description
-    
+
     if not update_params:
         raise HTTPException(status_code=400, detail="No fields to update")
-    
+
     try:
         updated_todo = todo_service.update_todo(todo_id, **update_params)
         if not updated_todo:
@@ -81,7 +98,7 @@ def toggle_todo_completion(todo_id: int):
     success = todo_service.toggle_completion(todo_id)
     if not success:
         raise HTTPException(status_code=404, detail="Todo not found")
-    
+
     # Return the updated todo
     updated_todo = todo_service.get_todo_by_id(todo_id)
     return updated_todo
@@ -95,6 +112,17 @@ def delete_todo(todo_id: int):
         raise HTTPException(status_code=404, detail="Todo not found")
     return {"message": "Todo deleted successfully"}
 
+
+# DISABLED: Chatbot module - commented out for stable baseline
+'''
+@app.post("/api/{user_id}/chat")
+async def chat_endpoint(user_id: str, request: dict):
+    """
+    Chat endpoint that handles user messages and returns AI responses
+    """
+    # This endpoint is disabled in the stable baseline
+    raise HTTPException(status_code=501, detail="Chat functionality is disabled in stable baseline")
+'''
 
 if __name__ == "__main__":
     import uvicorn

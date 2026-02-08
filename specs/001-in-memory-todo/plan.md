@@ -1,37 +1,35 @@
-# Implementation Plan: In-Memory Todo CLI
+# Implementation Plan: JWT Authentication for Todo App
 
-**Branch**: `001-in-memory-todo` | **Date**: 2025-12-31 | **Spec**: [specs/001-in-memory-todo/spec.md](specs/001-in-memory-todo/spec.md)
+**Branch**: `001-in-memory-todo` | **Date**: 2026-01-19 | **Spec**: [specs/001-in-memory-todo/spec.md](specs/001-in-memory-todo/spec.md)
 **Input**: Feature specification from `/specs/001-in-memory-todo/spec.md`
 
 **Note**: This template is filled in by the `/sp.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Implementation of a console-based todo application that stores all data in memory as specified in the feature requirements (FR-007) and constitution (In-Memory Architecture principle). The application will provide a menu-driven interface for users to add, view, update, delete, and mark todos as complete/incomplete. The architecture follows clean code principles with clear separation of concerns between the CLI interface, business logic, and data models as required by the Clean Code First principle. The implementation will use Python 3.13+ with standard libraries only, following TDD practices as mandated by the Test-First principle.
+Implement stateless JWT authentication across frontend and backend so that every API request is authenticated via JWT, each user can only access their own tasks, and the backend independently verifies identity without calling the frontend. The existing REST endpoints remain unchanged.
 
 ## Technical Context
 
-**Language/Version**: Python 3.13+ (as specified in constitution)
-**Primary Dependencies**: Standard Python libraries only (no third-party task management libraries as per constitution)
-**Storage**: In-memory only (no file or database persistence as per requirements and constitution)
-**Testing**: pytest for unit and integration testing (as per Test-First principle in constitution)
-**Target Platform**: Cross-platform console application (Windows, macOS, Linux)
-**Project Type**: Single project (console application with in-memory storage)
-**Performance Goals**: Fast response times (under 5 seconds for viewing todos regardless of list size, under 30 seconds for adding a todo)
-**Constraints**: Console-only interface (no GUI), in-memory storage only, menu-driven navigation
-**Scale/Scope**: Single-user application with personal todo list management
+**Language/Version**: Python 3.11, JavaScript/TypeScript for frontend
+**Primary Dependencies**: FastAPI (backend), Better Auth (frontend authentication), PyJWT (backend JWT handling)
+**Storage**: In-memory storage (as per spec), no persistent storage
+**Testing**: pytest for backend, Jest for frontend
+**Target Platform**: Web application (frontend + backend)
+**Project Type**: Web application (separate frontend and backend)
+**Performance Goals**: <200ms authentication verification, <50ms token validation
+**Constraints**: Stateless authentication, token-based security, zero-trust model for user IDs
+**Scale/Scope**: Individual user isolation, variable performance by user tier
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-### Compliance Verification:
-- ✅ Clean Code First: Architecture will maintain separation of concerns between CLI, business logic, and data models
-- ✅ Spec-Driven Development: Implementation will strictly follow the approved specification
-- ✅ Test-First (NON-NEGOTIABLE): All features will follow TDD approach with tests written before implementation
-- ✅ In-Memory Architecture: All data will be stored in memory only, no file or database persistence
-- ✅ Console-First Interface: All functionality will be accessible via CLI with menu-driven interface
-- ✅ Python 3.13+ Standards: Implementation will use Python 3.13+ with UV for environment management
+- [x] Library-first approach: Authentication service as a reusable module
+- [x] Test-first: All authentication flows covered by tests
+- [x] Integration testing: JWT validation and user isolation tested
+- [x] Observability: Proper logging of authentication events
+- [x] Simplicity: Using standard JWT implementation without over-engineering
 
 ## Project Structure
 
@@ -50,25 +48,118 @@ specs/001-in-memory-todo/
 ### Source Code (repository root)
 
 ```text
-# Single project structure for console application
-src/
-├── models/              # Data models (Todo class, etc.)
-│   └── todo.py
-├── services/            # Business logic (Todo management, etc.)
-│   └── todo_service.py
-├── cli/                 # Command-line interface
-│   └── main.py
-└── lib/                 # Shared utilities
-    └── utils.py
+backend/
+├── src/
+│   ├── models/
+│   │   └── todo.py
+│   ├── services/
+│   │   ├── auth.py
+│   │   └── todo_service.py
+│   ├── middleware/
+│   │   └── jwt_auth.py
+│   └── api/
+│       ├── deps.py
+│       └── v1/
+│           └── endpoints/
+│               └── todos.py
+└── tests/
 
-tests/
-├── unit/                # Unit tests for models and services
-│   ├── test_todo.py
-│   └── test_todo_service.py
-├── integration/         # Integration tests
-│   └── test_cli_integration.py
-└── contract/            # Contract tests (if any external interfaces)
-    └── (none for this project)
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   │   └── api_client.js
+│   └── auth/
+│       └── auth_provider.js
+└── tests/
 ```
 
-**Structure Decision**: Single project structure selected for the console application. This structure maintains clear separation of concerns as required by the Clean Code First principle, with distinct directories for models, services, CLI interface, and shared utilities. The test structure mirrors the source structure to ensure comprehensive test coverage.
+**Structure Decision**: Web application with separate frontend and backend components to handle the JWT authentication flow properly. The frontend handles user login and session management with Better Auth, while the backend implements JWT verification middleware to ensure all API requests are authenticated.
+
+## Complexity Tracking
+
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| Separate frontend/backend | Required for JWT auth flow | Would compromise security model |
+| Middleware implementation | Required for consistent auth enforcement | Per-endpoint checks would be inconsistent |
+
+## Phase 0: Research & Unknown Resolution
+
+### Research Tasks
+
+1. **Better Auth Integration**: How to configure Better Auth to issue JWTs that can be validated by our backend
+   - Decision: Use Better Auth's built-in JWT capabilities with shared secret
+   - Rationale: Standard approach that aligns with industry practices
+   - Alternatives considered: Custom JWT implementation vs. Better Auth's built-in support
+
+2. **JWT Token Format**: What claims need to be included in the JWT for proper user identification
+   - Decision: Include sub (user ID), email, iat (issued at), exp (expiration)
+   - Rationale: Contains all necessary information for user identification and validation
+   - Alternatives considered: Minimal claims vs. extended claims approach
+
+3. **Shared Secret Management**: How to securely share the JWT signing secret between frontend and backend
+   - Decision: Environment variable configuration with same value in both services
+   - Rationale: Standard practice for microservice authentication
+   - Alternatives considered: Separate secrets vs. shared secret approach
+
+## Phase 1: Design & Contracts
+
+### Data Model Updates
+
+The authentication system introduces new data concepts that need to be reflected in our data model:
+
+- User identity extracted from JWT token
+- Ownership relationship between users and todos
+- Authentication state management
+
+### API Contract Modifications
+
+All existing API endpoints will require authentication validation:
+
+- GET /api/{user_id}/tasks → Requires valid JWT with matching user ID
+- POST /api/{user_id}/tasks → Requires valid JWT with matching user ID
+- PUT /api/{user_id}/tasks/{task_id} → Requires valid JWT with matching user ID
+- DELETE /api/{user_id}/tasks/{task_id} → Requires valid JWT with matching user ID
+
+### Authentication Flow
+
+1. User authenticates via Better Auth on frontend
+2. Better Auth issues JWT with user identity claims
+3. Frontend stores JWT and attaches to all API requests
+4. Backend middleware validates JWT signature and expiration
+5. Backend enforces user ownership on all data operations
+
+## Phase 2: Implementation Plan
+
+### Component-Level Implementation
+
+1. **Better Auth Configuration**:
+   - Configure JWT plugin in Better Auth
+   - Set token expiration (e.g., 7 days)
+   - Define required claims (sub, email, iat, exp)
+
+2. **Frontend API Client**:
+   - Implement automatic JWT attachment to requests
+   - Handle token expiration and refresh
+   - Redirect to login on authentication failures
+
+3. **Backend JWT Middleware**:
+   - Extract and validate JWT from Authorization header
+   - Verify signature using shared secret
+   - Attach user identity to request context
+
+4. **Backend API Route Protection**:
+   - Enforce ownership checks on all data operations
+   - Ensure user_id in JWT matches user_id in URL/route
+   - Return appropriate error codes for unauthorized access
+
+### Security Guarantees
+
+- User Isolation: Each user only sees their own tasks
+- Stateless Auth: No backend session storage required
+- Token Expiry: Automatic session expiration
+- Zero Trust URLs: URL user ID never trusted over JWT
+- Independent Verification: Backend verifies auth without external calls

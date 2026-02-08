@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set JWT Token for Todo App</title>
+</head>
+<body>
+    <h1>Setting JWT Token for Todo App</h1>
+    <p>This page will set the necessary tokens in your browser's localStorage for the Todo application.</p>
+    
+    <button onclick="setTokens()">Click to Set Tokens</button>
+    <p id="status"></p>
+
+    <script>
+        function setTokens() {
+            // Set the JWT token we generated
+            const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlcjEyMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImlhdCI6MTc2OTA4OTE5NCwiZXhwIjoxNzY5MTc1NTk0fQ.v9P3n4l9uI4ejCZyE3xFRhXqMet9BSyL--NAXlTWmkw';
+            const userId = 'testuser123';
+            
+            localStorage.setItem('jwt_token', token);
+            localStorage.setItem('userId', userId);
+            
+            document.getElementById('status').innerHTML = `
+                <p>Tokens have been set in localStorage:</p>
+                <ul>
+                    <li>jwt_token: ${token.substring(0, 20)}...</li>
+                    <li>userId: ${userId}</li>
+                </ul>
+                <p>You can now access the Todo application at <a href="http://localhost:3000">http://localhost:3000</a></p>
+            `;
+        }
+        
+        // Set tokens automatically when page loads
+        window.onload = function() {
+            setTokens();
+        };
+    </script>
+</body>
+</html>

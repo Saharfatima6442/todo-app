@@ -1,0 +1,266 @@
+openapi: 3.0.0
+info:
+  title: JWT Authenticated Todo API
+  version: 1.0.0
+  description: API for managing todos with JWT-based authentication
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token issued by Better Auth
+
+  schemas:
+    Todo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the todo
+        title:
+          type: string
+          description: Title of the task (1-100 characters)
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          description: Detailed description of the task (up to 500 characters)
+          maxLength: 500
+        completed:
+          type: boolean
+          description: Whether the task is completed
+        owner_id:
+          type: string
+          description: ID of the user who owns this task
+      required:
+        - id
+        - title
+        - completed
+        - owner_id
+
+    NewTodo:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Title of the task (1-100 characters)
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          description: Detailed description of the task (up to 500 characters)
+          maxLength: 500
+        completed:
+          type: boolean
+          description: Whether the task is completed (defaults to false)
+      required:
+        - title
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+
+  parameters:
+    userId:
+      name: user_id
+      in: path
+      required: true
+      description: ID of the user (must match authenticated user)
+      schema:
+        type: string
+    todoId:
+      name: todo_id
+      in: path
+      required: true
+      description: ID of the todo item
+      schema:
+        type: string
+
+paths:
+  /api/{user_id}/todos:
+    get:
+      summary: Get all todos for the authenticated user
+      description: Retrieve all todos associated with the authenticated user
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: List of todos for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Todo'
+        '401':
+          description: Unauthorized - Invalid or missing JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - User ID in JWT doesn't match user_id in URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+    
+    post:
+      summary: Create a new todo for the authenticated user
+      description: Create a new todo item associated with the authenticated user
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTodo'
+      responses:
+        '201':
+          description: Todo created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - User ID in JWT doesn't match user_id in URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+  /api/{user_id}/todos/{todo_id}:
+    get:
+      summary: Get a specific todo for the authenticated user
+      description: Retrieve a specific todo item by ID
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/todoId'
+      responses:
+        '200':
+          description: Todo retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '401':
+          description: Unauthorized - Invalid or missing JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - User ID in JWT doesn't match user_id in URL or user doesn't own the todo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+    put:
+      summary: Update a specific todo for the authenticated user
+      description: Update an existing todo item
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/todoId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Todo'
+      responses:
+        '200':
+          description: Todo updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - User ID in JWT doesn't match user_id in URL or user doesn't own the todo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+    delete:
+      summary: Delete a specific todo for the authenticated user
+      description: Delete an existing todo item
+      parameters:
+        - $ref: '#/components/parameters/userId'
+        - $ref: '#/components/parameters/todoId'
+      responses:
+        '204':
+          description: Todo deleted successfully
+        '401':
+          description: Unauthorized - Invalid or missing JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - User ID in JWT doesn't match user_id in URL or user doesn't own the todo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+security:
+  - bearerAuth: []

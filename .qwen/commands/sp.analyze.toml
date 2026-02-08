@@ -1,8 +1,8 @@
-description = "Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation."
+description = "Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation. Additionally analyze why the backend might not be working and why the chatbot service is disabled."
 
 prompt = """
 ---
-description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
+description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation. Additionally analyze why the backend might not be working and why the chatbot service is disabled.
 ---
 
 ## User Input
@@ -16,6 +16,8 @@ You **MUST** consider the user input before proceeding (if not empty).
 ## Goal
 
 Identify inconsistencies, duplications, ambiguities, and underspecified items across the three core artifacts (`spec.md`, `plan.md`, `tasks.md`) before implementation. This command MUST run only after `/sp.tasks` has successfully produced a complete `tasks.md`.
+
+Additionally, analyze why the backend might not be working and why the chatbot service is disabled.
 
 ## Operating Constraints
 
@@ -114,12 +116,21 @@ Focus on high-signal findings. Limit to 50 findings total; aggregate remainder i
 - Task ordering contradictions (e.g., integration tasks before foundational setup tasks without dependency note)
 - Conflicting requirements (e.g., one requires Next.js while other specifies Vue)
 
+#### G. Backend and Chatbot Service Analysis
+
+- Check for missing environment variables that might prevent the backend from starting
+- Identify any missing dependencies or configuration that might disable the chatbot service
+- Look for error handling issues that might cause the backend to fail silently
+- Examine startup scripts and configurations for potential problems
+- Verify that the MCP server is properly configured and running
+- Check for API endpoint mismatches between the chatbot and backend services
+
 ### 5. Severity Assignment
 
 Use this heuristic to prioritize findings:
 
 - **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion
+- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion, or backend/chatbot service not working
 - **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case
 - **LOW**: Style/wording improvements, minor redundancy not affecting execution order
 
@@ -144,6 +155,12 @@ Output a Markdown report (no file writes) with the following structure:
 
 **Unmapped Tasks:** (if any)
 
+**Backend and Chatbot Service Issues:**
+
+| ID | Category | Severity | Location(s) | Summary | Recommendation |
+|----|----------|----------|-------------|---------|----------------|
+| B1 | Configuration | HIGH | .env.example, start scripts | Missing or incorrect environment variables preventing backend startup | Verify all required environment variables are set correctly |
+
 **Metrics:**
 
 - Total Requirements
@@ -152,6 +169,7 @@ Output a Markdown report (no file writes) with the following structure:
 - Ambiguity Count
 - Duplication Count
 - Critical Issues Count
+- Backend/Chatbot Issues Count
 
 ### 7. Provide Next Actions
 

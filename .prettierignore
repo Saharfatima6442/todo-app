@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+public/
+out/
+
+# Environment variables
+.env*
+
+# Logs
+*.log
+
+# Testing
+coverage/
+
+# Python files
+*.py
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info

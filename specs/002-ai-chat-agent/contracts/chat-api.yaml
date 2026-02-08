@@ -1,0 +1,94 @@
+openapi: 3.0.3
+info:
+  title: AI Chat Agent API
+  description: API for interacting with the AI Chat Agent for todo management
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Send a message to the AI chat agent
+      description: Sends a user message to the AI agent and receives a response with potential tool calls
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: The user's message to the AI agent
+                  example: "Add a task to buy groceries"
+                conversation_id:
+                  type: string
+                  format: uuid
+                  description: Optional conversation ID to continue an existing conversation
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+              required:
+                - message
+      responses:
+        '200':
+          description: Successful response from the AI agent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: The AI agent's response to the user
+                    example: "I've added the task 'buy groceries' to your list."
+                  conversation_id:
+                    type: string
+                    format: uuid
+                    description: The ID of the conversation
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                  tool_calls:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: The name of the tool that was called
+                          example: "add_task"
+                        arguments:
+                          type: object
+                          description: The arguments passed to the tool
+                          example:
+                            title: "buy groceries"
+                            description: "get milk, bread, and eggs"
+                        result:
+                          type: object
+                          description: The result of the tool call
+                          example:
+                            success: true
+                            task_id: 123
+                required:
+                  - response
+                  - conversation_id
+                  - tool_calls
+        '401':
+          description: Unauthorized - invalid or missing authentication token
+        '400':
+          description: Bad request - malformed input
+        '500':
+          description: Internal server error
+      security:
+        - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

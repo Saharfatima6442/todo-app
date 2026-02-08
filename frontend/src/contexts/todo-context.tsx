@@ -64,15 +64,13 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleCompletion = async (id: number) => {
-    try {
-      const updatedTodo = await toggleTodoCompletion(id);
-      setTodos(prev => prev.map(todo => todo.id === id ? updatedTodo : todo));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred while toggling completion');
-      console.error('Error toggling completion:', err);
-      throw err;
-    }
-  };
+  const todo = todos.find(t => t.id === id);
+  if (!todo) return;
+
+  const updated = await toggleTodoCompletion(id, !todo.completed);
+  setTodos(prev => prev.map(t => t.id === id ? updated : t));
+};
+
 
   const removeTodo = async (id: number) => {
     try {

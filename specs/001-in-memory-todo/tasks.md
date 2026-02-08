@@ -1,272 +1,195 @@
----
+# Tasks: In-Memory Todo CLI with Web Support
 
-description: "Task list template for feature implementation"
----
+**Feature**: In-Memory Todo CLI with Web Support
+**Branch**: `001-in-memory-todo`
+**Generated from**: specs/001-in-memory-todo/spec.md, specs/001-in-memory-todo/plan.md, specs/001-in-memory-todo/data-model.md
 
-# Tasks: In-Memory Todo CLI
+## Overview
 
-**Input**: Design documents from `/specs/001-in-memory-todo/`
-**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
+This document outlines the implementation tasks for building a Python console-based todo application with in-memory storage that also supports web access. The application will have both CLI and web interfaces with JWT authentication for web access.
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+## Phase 1: Setup
 
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+Initialize the project structure and configure shared dependencies.
 
-## Format: `[ID] [P?] [Story] Description`
+- [ ] T001 Create backend directory structure: backend/src/{models,services,middleware,api}
+- [ ] T002 Create frontend directory structure: frontend/src/{components,pages,services,auth}
+- [ ] T003 Initialize backend requirements.txt with FastAPI, PyJWT, python-multipart, and python-dotenv
+- [ ] T004 Initialize frontend package.json with necessary dependencies for React, Next.js, and authentication
+- [ ] T005 Create shared environment configuration for BETTER_AUTH_SECRET
+- [ ] T006 Set up project root with main.py for CLI and src/api/todo_api.py for web API
+- [ ] T007 Configure gitignore for both backend and frontend
 
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
-- Include exact file paths in descriptions
+## Phase 2: Foundational Components
 
-## Path Conventions
+Implement foundational components that all user stories depend on.
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- [ ] T010 [P] Implement JWT utility functions in backend/src/utils/jwt_handler.py
+- [ ] T011 [P] Create authentication middleware in backend/src/middleware/jwt_auth.py with CORS support
+- [ ] T012 [P] Create Todo model in backend/src/models/todo.py with owner_id field
+- [ ] T013 [P] Create User model representation based on JWT claims
+- [ ] T014 [P] Create basic API dependency handlers in backend/src/api/deps.py
+- [ ] T015 [P] Create frontend API client with JWT attachment in frontend/src/services/api_client.js
+- [ ] T016 [P] Create frontend auth provider in frontend/src/auth/auth_provider.js
+- [ ] T017 Configure shared BETTER_AUTH_SECRET in both frontend and backend environments
+- [ ] T018 [P] Create in-memory storage service in backend/src/services/storage_service.py
+- [ ] T019 [P] Create todo service with ownership enforcement in backend/src/services/todo_service.py
+- [ ] T020 [P] Configure CORS middleware in backend/src/api/todo_api.py to allow frontend origin
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 3: User Story 1 - Add Todo (Priority: P1)
 
-**Purpose**: Project initialization and basic structure
-
-- [X] T001 Create project structure per implementation plan
-- [X] T002 Initialize Python 3.13+ project with UV dependencies
-- [ ] T003 [P] Configure linting and formatting tools (pylint, black, flake8)
-
----
-
-## Phase 2: Foundational (Blocking Prerequisites)
-
-**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
-
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
-
-Examples of foundational tasks (adjust based on your project):
-
-- [X] T004 Create base Todo model in src/models/todo.py
-- [X] T005 [P] Create TodoService in src/services/todo_service.py (depends on T004)
-- [X] T006 Create in-memory storage mechanism for todos
-- [X] T007 Create CLI interface framework in src/cli/main.py
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
-
-**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
-
----
-
-## Phase 3: User Story 1 - Add Todo (Priority: P1) 🎯 MVP
-
-**Goal**: Enable users to add new todo items to their list with a title and description, assigning a unique ID
+As a user, I want to add new todo items to my list so that I can keep track of tasks I need to complete.
 
 **Independent Test**: The application allows users to add a new todo with a title and description, assigns it a unique ID, and displays it in the list of todos.
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+**Acceptance Scenarios**:
+1. Given I am at the main menu, When I select the "Add Todo" option and enter a title and description, Then a new todo is created with a unique ID and added to the in-memory list.
+2. Given I have entered a title and description for a new todo, When I submit the form, Then I see a confirmation message and the new todo appears in the list when I view all todos.
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
-
-- [X] T010 [P] [US1] Contract test for add todo functionality in tests/contract/test_add_todo.py
-- [X] T011 [P] [US1] Unit test for Todo model validation in tests/unit/test_todo.py
-
-### Implementation for User Story 1
-
-- [X] T012 [P] [US1] Create Todo model with validation in src/models/todo.py (depends on T004)
-- [X] T013 [P] [US1] Create add_todo method in TodoService in src/services/todo_service.py (depends on T005)
-- [X] T014 [US1] Implement add todo CLI command in src/cli/main.py (depends on T007, T005)
-- [X] T015 [US1] Add validation for title and description in src/models/todo.py
-- [X] T016 [US1] Add unique ID assignment logic in src/services/todo_service.py
-
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
-
----
+- [ ] T021 [US1] Create API endpoint for adding todos in backend/src/api/v1/endpoints/todos.py
+- [ ] T022 [US1] Implement JWT validation in add todo endpoint
+- [ ] T023 [US1] Implement ownership assignment in add todo endpoint (set owner_id from JWT)
+- [ ] T024 [US1] Add character validation for title (1-100 chars) and description (up to 500 chars)
+- [ ] T025 [US1] Create frontend component for adding todos in frontend/src/components/AddTodo.jsx
+- [ ] T026 [US1] Connect frontend add todo component to authenticated API client
+- [ ] T027 [US1] Implement error handling for add todo operation
+- [ ] T028 [US1] Add tests for add todo functionality in backend/tests/test_todos.py
+- [ ] T029 [US1] Implement CLI command for adding todos in src/cli/main.py
 
 ## Phase 4: User Story 2 - View Todos (Priority: P1)
 
-**Goal**: Enable users to view all their todos with ID, title, description, and completion status
+As a user, I want to view all my todos so that I can see what tasks I need to complete.
 
 **Independent Test**: The application displays all todos with their ID, title, description, and completion status in a clear, readable format.
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+**Acceptance Scenarios**:
+1. Given I have added one or more todos, When I select the "View Todos" option, Then all todos are displayed with their ID, title, description, and completion status.
+2. Given I have no todos in the system, When I select the "View Todos" option, Then I see a message indicating that there are no todos to display.
 
-- [X] T017 [P] [US2] Contract test for view todos functionality in tests/contract/test_view_todos.py
-- [X] T018 [P] [US2] Unit test for get_all_todos method in tests/unit/test_todo_service.py
-
-### Implementation for User Story 2
-
-- [X] T019 [P] [US2] Create get_all_todos method in TodoService in src/services/todo_service.py (depends on T005)
-- [X] T020 [US2] Implement view todos CLI command in src/cli/main.py (depends on T007, T019)
-- [X] T021 [US2] Add formatting for displaying todos in src/cli/main.py
-
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
-
----
+- [ ] T030 [US2] Create API endpoint for viewing todos in backend/src/api/v1/endpoints/todos.py
+- [ ] T031 [US2] Implement JWT validation in view todos endpoint
+- [ ] T032 [US2] Implement ownership filtering in view todos endpoint (only return user's todos)
+- [ ] T033 [US2] Create frontend component for viewing todos in frontend/src/components/ViewTodos.jsx
+- [ ] T034 [US2] Connect frontend view todos component to authenticated API client
+- [ ] T035 [US2] Implement empty state handling for no todos
+- [ ] T036 [US2] Add tests for view todos functionality in backend/tests/test_todos.py
+- [ ] T037 [US2] Implement CLI command for viewing todos in src/cli/main.py
 
 ## Phase 5: User Story 3 - Update Todo (Priority: P2)
 
-**Goal**: Enable users to update the title and/or description of an existing todo using its ID
+As a user, I want to update the title and/or description of an existing todo so that I can keep my task information accurate.
 
 **Independent Test**: The application allows users to update the title and/or description of an existing todo using its ID.
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+**Acceptance Scenarios**:
+1. Given I have a list of todos, When I select the "Update Todo" option and provide a valid todo ID along with new title and/or description, Then the todo is updated with the new information.
+2. Given I attempt to update a todo with an invalid ID, When I submit the update request, Then I receive an error message indicating that the todo was not found.
 
-- [X] T022 [P] [US3] Contract test for update todo functionality in tests/contract/test_update_todo.py
-- [X] T023 [P] [US3] Unit test for update_todo method in tests/unit/test_todo_service.py
-
-### Implementation for User Story 3
-
-- [X] T024 [P] [US3] Create update_todo method in TodoService in src/services/todo_service.py (depends on T005)
-- [X] T025 [US3] Implement update todo CLI command in src/cli/main.py (depends on T007, T024)
-- [X] T026 [US3] Add validation for update operations in src/models/todo.py
-
-**Checkpoint**: At this point, User Stories 1, 2 AND 3 should all work independently
-
----
+- [ ] T040 [US3] Create API endpoint for updating todos in backend/src/api/v1/endpoints/todos.py
+- [ ] T041 [US3] Implement JWT validation in update todo endpoint
+- [ ] T042 [US3] Implement ownership verification in update todo endpoint (ensure user owns the todo)
+- [ ] T043 [US3] Add character validation for title (1-100 chars) and description (up to 500 chars)
+- [ ] T044 [US3] Create frontend component for updating todos in frontend/src/components/UpdateTodo.jsx
+- [ ] T045 [US3] Connect frontend update todo component to authenticated API client
+- [ ] T046 [US3] Implement error handling for update todo operation (invalid ID, unauthorized)
+- [ ] T047 [US3] Add tests for update todo functionality in backend/tests/test_todos.py
+- [ ] T048 [US3] Implement CLI command for updating todos in src/cli/main.py
 
 ## Phase 6: User Story 4 - Delete Todo (Priority: P2)
 
-**Goal**: Enable users to delete a todo using its ID
+As a user, I want to delete a todo so that I can remove tasks that are no longer relevant.
 
 **Independent Test**: The application allows users to delete a todo using its ID, and the todo is removed from the in-memory list.
 
-### Tests for User Story 4 (OPTIONAL - only if tests requested) ⚠️
+**Acceptance Scenarios**:
+1. Given I have a list of todos, When I select the "Delete Todo" option and provide a valid todo ID, Then the todo is removed from the list.
+2. Given I attempt to delete a todo with an invalid ID, When I submit the delete request, Then I receive an error message indicating that the todo was not found.
 
-- [X] T027 [P] [US4] Contract test for delete todo functionality in tests/contract/test_delete_todo.py
-- [X] T028 [P] [US4] Unit test for delete_todo method in tests/unit/test_todo_service.py
-
-### Implementation for User Story 4
-
-- [X] T029 [P] [US4] Create delete_todo method in TodoService in src/services/todo_service.py (depends on T005)
-- [X] T030 [US4] Implement delete todo CLI command in src/cli/main.py (depends on T007, T029)
-
-**Checkpoint**: At this point, User Stories 1, 2, 3 AND 4 should all work independently
-
----
+- [ ] T050 [US4] Create API endpoint for deleting todos in backend/src/api/v1/endpoints/todos.py
+- [ ] T051 [US4] Implement JWT validation in delete todo endpoint
+- [ ] T052 [US4] Implement ownership verification in delete todo endpoint (ensure user owns the todo)
+- [ ] T053 [US4] Create frontend component for deleting todos in frontend/src/components/DeleteTodo.jsx
+- [ ] T054 [US4] Connect frontend delete todo component to authenticated API client
+- [ ] T055 [US4] Implement error handling for delete todo operation (invalid ID, unauthorized)
+- [ ] T056 [US4] Add tests for delete todo functionality in backend/tests/test_todos.py
+- [ ] T057 [US4] Implement CLI command for deleting todos in src/cli/main.py
 
 ## Phase 7: User Story 5 - Mark Todo Complete/Incomplete (Priority: P2)
 
-**Goal**: Enable users to toggle the completion status of a todo using its ID
+As a user, I want to mark a todo as complete or incomplete so that I can track my progress.
 
 **Independent Test**: The application allows users to toggle the completion status of a todo using its ID.
 
-### Tests for User Story 5 (OPTIONAL - only if tests requested) ⚠️
+**Acceptance Scenarios**:
+1. Given I have a list of todos, When I select the "Mark Complete/Incomplete" option and provide a valid todo ID, Then the completion status of the todo is toggled.
+2. Given I attempt to mark a todo with an invalid ID, When I submit the request, Then I receive an error message indicating that the todo was not found.
 
-- [X] T031 [P] [US5] Contract test for mark complete/incomplete functionality in tests/contract/test_mark_todo.py
-- [X] T032 [P] [US5] Unit test for toggle_completion method in tests/unit/test_todo_service.py
+- [ ] T060 [US5] Create API endpoint for toggling todo completion in backend/src/api/v1/endpoints/todos.py
+- [ ] T061 [US5] Implement JWT validation in toggle completion endpoint
+- [ ] T062 [US5] Implement ownership verification in toggle completion endpoint (ensure user owns the todo)
+- [ ] T063 [US5] Create frontend component for toggling todo completion in frontend/src/components/ToggleTodoCompletion.jsx
+- [ ] T064 [US5] Connect frontend toggle completion component to authenticated API client
+- [ ] T065 [US5] Implement error handling for toggle completion operation (invalid ID, unauthorized)
+- [ ] T066 [US5] Add tests for toggle completion functionality in backend/tests/test_todos.py
+- [ ] T067 [US5] Implement CLI command for marking todos complete/incomplete in src/cli/main.py
 
-### Implementation for User Story 5
+## Phase 8: CLI Interface Implementation
 
-- [X] T033 [P] [US5] Create mark_complete, mark_incomplete, and toggle_completion methods in TodoService in src/services/todo_service.py (depends on T005)
-- [X] T034 [US5] Implement mark complete/incomplete CLI command in src/cli/main.py (depends on T007, T033)
+Implement the console-based user interface as specified in the original spec.
 
-**Checkpoint**: All user stories should now be independently functional
+- [ ] T070 [P] Implement main CLI menu in src/cli/main.py
+- [ ] T071 [P] Implement CLI input validation and error handling
+- [ ] T072 [P] Create CLI helper functions for displaying todos in a formatted way
+- [ ] T073 [P] Add CLI configuration to main.py to run CLI interface
+- [ ] T074 [P] Add CLI tests in tests/test_cli.py
 
----
+## Phase 9: Security & Validation
 
-## Phase N: Polish & Cross-Cutting Concerns
+Implement security measures and validation checks.
 
-**Purpose**: Improvements that affect multiple user stories
+- [ ] T080 Configure Better Auth to issue JWTs with required claims (sub, email, iat, exp)
+- [ ] T081 Implement standardized error responses for authentication failures
+- [ ] T082 Implement standardized error responses for authorization failures
+- [ ] T083 Add rate limiting to prevent abuse of authentication endpoints
+- [ ] T084 Implement token refresh mechanism for frontend
+- [ ] T085 Add comprehensive logging for authentication events
+- [ ] T086 Add tests for authentication edge cases in backend/tests/test_auth.py
 
-- [ ] T035 [P] Documentation updates in docs/
-- [ ] T036 Code cleanup and refactoring
-- [ ] T037 Performance optimization across all stories
-- [ ] T038 [P] Additional unit tests (if requested) in tests/unit/
-- [ ] T039 Security hardening
-- [ ] T040 Run quickstart.md validation
+## Phase 10: Polish & Cross-Cutting Concerns
 
----
+Final touches and cross-cutting concerns.
 
-## Dependencies & Execution Order
+- [ ] T090 Create main application entry point for backend in backend/main.py
+- [ ] T091 Create main application entry point for frontend in frontend/src/index.js
+- [ ] T092 Implement graceful error handling throughout the application
+- [ ] T093 Add comprehensive documentation for API endpoints
+- [ ] T094 Create health check endpoint in backend/src/api/v1/endpoints/health.py
+- [ ] T095 Add comprehensive tests for all user stories in backend/tests/integration/
+- [ ] T096 Create README with setup and usage instructions
+- [ ] T097 Perform end-to-end testing of all user stories
+- [ ] T098 Conduct security review of JWT implementation
+- [ ] T099 Optimize performance based on defined goals (<200ms auth verification)
+- [ ] T100 Update start scripts to properly coordinate frontend and backend startup
 
-### Phase Dependencies
+## Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion
-  - User stories can then proceed in parallel (if staffed)
-  - Or sequentially in priority order (P1 → P2 → P3)
-- **Polish (Final Phase)**: Depends on all desired user stories being complete
+- User Story 1 (Add Todo) has no dependencies
+- User Story 2 (View Todos) has no dependencies
+- User Story 3 (Update Todo) depends on User Story 1 (need to have todos to update)
+- User Story 4 (Delete Todo) depends on User Story 1 (need to have todos to delete)
+- User Story 5 (Mark Complete/Incomplete) depends on User Story 1 (need to have todos to mark)
 
-### User Story Dependencies
+## Parallel Execution Examples
 
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
-- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
-- **User Story 4 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable
-- **User Story 5 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3/US4 but should be independently testable
-
-### Within Each User Story
-
-- Tests (if included) MUST be written and FAIL before implementation
-- Models before services
-- Services before endpoints
-- Core implementation before integration
-- Story complete before moving to next priority
-
-### Parallel Opportunities
-
-- All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)
-- Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
-- All tests for a user story marked [P] can run in parallel
-- Models within a story marked [P] can run in parallel
-- Different user stories can be worked on in parallel by different team members
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for add todo functionality in tests/contract/test_add_todo.py"
-Task: "Unit test for Todo model validation in tests/unit/test_todo.py"
-
-# Launch all models for User Story 1 together:
-Task: "Create Todo model with validation in src/models/todo.py"
-Task: "Create add_todo method in TodoService in src/services/todo_service.py"
-```
-
----
+For each user story, the following tasks can be executed in parallel:
+- API endpoint implementation
+- Frontend component development
+- CLI command implementation
+- Related tests creation
 
 ## Implementation Strategy
 
-### MVP First (User Story 1 Only)
-
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test User Story 1 independently
-5. Deploy/demo if ready
-
-### Incremental Delivery
-
-1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
-3. Add User Story 2 → Test independently → Deploy/Demo
-4. Add User Story 3 → Test independently → Deploy/Demo
-5. Add User Story 4 → Test independently → Deploy/Demo
-6. Add User Story 5 → Test independently → Deploy/Demo
-7. Each story adds value without breaking previous stories
-
-### Parallel Team Strategy
-
-With multiple developers:
-
-1. Team completes Setup + Foundational together
-2. Once Foundational is done:
-   - Developer A: User Story 1
-   - Developer B: User Story 2
-   - Developer C: User Story 3
-   - Developer D: User Story 4
-   - Developer E: User Story 5
-3. Stories complete and integrate independently
-
----
-
-## Notes
-
-- [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability
-- Each user story should be independently completable and testable
-- Verify tests fail before implementing
-- Commit after each task or logical group
-- Stop at any checkpoint to validate story independently
-- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+1. **MVP Scope**: Complete User Story 1 (Add Todo) and User Story 2 (View Todos) with basic JWT authentication and CLI functionality
+2. **Incremental Delivery**: Add remaining user stories in priority order (P1, P2)
+3. **Security First**: Implement authentication and authorization before business logic
+4. **Test Continuously**: Add tests alongside implementation for each user story

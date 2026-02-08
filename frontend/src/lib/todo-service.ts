@@ -1,87 +1,101 @@
-/**
- * Service to interact with the Todo API
- */
 import { Todo } from '@/types/todo';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 /**
- * Fetch all todos from the API
+ * Generic fetch helper without auth
+ */
+const fetchWithoutAuth = async (url: string, options: RequestInit = {}) => {
+  console.log('Fetching from URL:', url);
+
+  const response = await fetch(url, options);
+
+  console.log('Response status:', response.status);
+
+  if (!response.ok) {
+    let errorText = '';
+
+    try {
+      errorText = await response.text();
+      console.error('Raw error response:', errorText);
+
+      const errorData = JSON.parse(errorText);
+      console.error('Parsed API Error:', errorData);
+
+      throw new Error(
+        errorData.detail ||
+        errorData.message ||
+        `HTTP error! status: ${response.status}`
+      );
+    } catch (e) {
+      console.error('Non-JSON API Error:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    }
+  }
+
+  return response.json();
+};
+
+/**
+ * Fetch all todos
  */
 export const fetchTodos = async (): Promise<Todo[]> => {
-  const response = await fetch(`${API_BASE_URL}/todos`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch todos');
-  }
-  return response.json();
+  return fetchWithoutAuth(`${API_BASE_URL}/todos`);
 };
 
 /**
  * Create a new todo
+ * FIXED: Using query params instead of JSON body
  */
 export const createTodo = async (title: string, description?: string): Promise<Todo> => {
-  const response = await fetch(`${API_BASE_URL}/todos`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ id: 0, title, description, completed: false }), // id will be assigned by backend
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to create todo');
+
+  const url = new URL(`${API_BASE_URL}/todos`);
+
+  url.searchParams.append("title", title);
+
+  if (description) {
+    url.searchParams.append("description", description);
   }
-  
-  return response.json();
+
+  return fetchWithoutAuth(url.toString(), {
+    method: 'POST'
+  });
 };
 
 /**
- * Update an existing todo
+ * Update todo
+ * FIXED: Using query params instead of JSON body
  */
-export const updateTodo = async (id: number, title?: string, description?: string): Promise<Todo> => {
-  const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ title, description }),
+export const updateTodo = async (
+  id: number,
+  title?: string,
+  description?: string
+): Promise<Todo> => {
+
+  const url = new URL(`${API_BASE_URL}/todos/${id}`);
+
+  if (title) url.searchParams.append("title", title);
+  if (description) url.searchParams.append("description", description);
+
+  return fetchWithoutAuth(url.toString(), {
+    method: 'PUT'
   });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to update todo');
-  }
-  
-  return response.json();
 };
 
 /**
- * Toggle the completion status of a todo
+ * Toggle completion
  */
 export const toggleTodoCompletion = async (id: number): Promise<Todo> => {
-  const response = await fetch(`${API_BASE_URL}/todos/${id}/toggle`, {
+  return fetchWithoutAuth(`${API_BASE_URL}/todos/${id}/toggle`, {
     method: 'PATCH',
   });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to toggle todo completion');
-  }
-  
-  return response.json();
 };
 
 /**
- * Delete a todo
+ * Delete todo
  */
 export const deleteTodo = async (id: number): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/todos/${id}`, {
-    method: 'DELETE',
+  await fetchWithoutAuth(`${API_BASE_URL}/todos/${id}`, {
+    method: 'DELETE'
   });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to delete todo');
-  }
 };

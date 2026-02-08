@@ -5,6 +5,14 @@
 **Status**: Draft
 **Input**: User description: "Phase I: In-Memory Todo CLI - Build a Python console-based todo application with in-memory storage, no database, no file storage, console-based"
 
+## Clarifications
+### Session 2026-01-19
+- Q: Should the CLI app integrate with Better Auth for user sessions and JWT validation? → A: Integrated auth - CLI should connect to Better Auth for user sessions and JWT validation
+- Q: What should happen when a user attempts to exceed character limits for title/description? → A: Reject with error - System rejects inputs exceeding limits with clear error message
+- Q: How should the application handle errors and recovery? → A: Detailed messages with graceful recovery - Provide informative error messages to users while implementing safeguards to prevent exposing sensitive system information, and attempt graceful recovery from errors
+- Q: What should the menu navigation structure be after login? → A: Menu-driven interface with options to perform tasks and a return to homepage button to go back to the user's dashboard
+- Q: How should performance requirements vary by user type? → A: Variable by user tier - Different limits for different user types
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Add Todo (Priority: P1)
@@ -92,9 +100,9 @@ As a user, I want to mark a todo as complete or incomplete so that I can track m
 ### Functional Requirements
 
 - **FR-001**: System MUST provide a console-based user interface for interaction
-- **FR-002**: Users MUST be able to add a new todo with a title and description
+- **FR-002**: Users MUST be able to add a new todo with a title (1-100 characters) and description (up to 500 characters)
 - **FR-003**: Users MUST be able to view all todos with their ID, title, description, and completion status
-- **FR-004**: Users MUST be able to update the title and/or description of an existing todo using its ID
+- **FR-004**: Users MUST be able to update the title (1-100 characters) and/or description (up to 500 characters) of an existing todo using its ID
 - **FR-005**: Users MUST be able to delete a todo using its ID
 - **FR-006**: Users MUST be able to mark a todo as complete or incomplete using its ID
 - **FR-007**: System MUST store all data in memory only (no file or database persistence)
