@@ -1,5 +1,5 @@
 """
-Main entry point for the Todo API server
+Main entry point for the Todo API server with authentication
 """
 from src.api.todo_api import app
 import uvicorn

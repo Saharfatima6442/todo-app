@@ -1,8 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { Todo } from '@/types/todo';
-import { fetchTodos, createTodo, updateTodo, toggleTodoCompletion, deleteTodo } from '@/lib/todo-service';
+import { fetchTodos, createTodo, updateTodo as updateTodoService, toggleTodoCompletion, deleteTodo } from '@/lib/todo-service';
+import { authProvider } from '@/auth/auth_provider';
+import { useRouter } from 'next/navigation';
 
 type TodoContextType = {
   todos: Todo[];
@@ -15,17 +17,30 @@ type TodoContextType = {
   refreshTodos: () => Promise<void>;
 };
 
-const TodoContext = createContext<TodoContextType | undefined>(undefined);
+export const TodoContext = React.createContext<TodoContextType | undefined>(undefined);
 
 export const TodoProvider = ({ children }: { children: ReactNode }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Load todos on initial render
+  // Check authentication on initial load
   useEffect(() => {
-    loadTodos();
-  }, []);
+    const checkAuth = async () => {
+      await authProvider.init();
+      const authenticated = authProvider.isAuthenticated();
+      
+      if (!authenticated) {
+        router.push('/auth');
+        return;
+      }
+      
+      loadTodos();
+    };
+    
+    checkAuth();
+  }, [router]);
 
   const loadTodos = async () => {
     try {
@@ -54,7 +69,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
 
   const updateTodoLocally = async (id: number, title?: string, description?: string) => {
     try {
-      const updatedTodo = await updateTodo(id, title, description);
+      const updatedTodo = await updateTodoService(id, title, description);
       setTodos(prev => prev.map(todo => todo.id === id ? updatedTodo : todo));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while updating todo');
@@ -64,13 +79,15 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleCompletion = async (id: number) => {
-  const todo = todos.find(t => t.id === id);
-  if (!todo) return;
-
-  const updated = await toggleTodoCompletion(id);
-  setTodos(prev => prev.map(t => t.id === id ? updated : t));
-};
-
+    try {
+      const updated = await toggleTodoCompletion(id);
+      setTodos(prev => prev.map(t => t.id === id ? updated : t));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while toggling completion');
+      console.error('Error toggling completion:', err);
+      throw err;
+    }
+  };
 
   const removeTodo = async (id: number) => {
     try {
@@ -106,7 +123,7 @@ export const TodoProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useTodo = () => {
-  const context = useContext(TodoContext);
+  const context = React.useContext(TodoContext);
   if (context === undefined) {
     throw new Error('useTodo must be used within a TodoProvider');
   }

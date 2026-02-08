@@ -1,14 +1,28 @@
 import { Todo } from '@/types/todo';
+import { authProvider } from '@/auth/auth_provider';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 /**
- * Generic fetch helper without auth
+ * Generic fetch helper with auth
  */
-const fetchWithoutAuth = async (url: string, options: RequestInit = {}) => {
+const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   console.log('Fetching from URL:', url);
 
-  const response = await fetch(url, options);
+  // Get the auth token
+  const token = authProvider.getToken();
+
+  // Add authorization header if token exists
+  const authOptions = {
+    ...options,
+    headers: {
+      ...options.headers,
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      'Content-Type': 'application/json',
+    }
+  };
+
+  const response = await fetch(url, authOptions);
 
   console.log('Response status:', response.status);
 
@@ -40,44 +54,37 @@ const fetchWithoutAuth = async (url: string, options: RequestInit = {}) => {
  * Fetch all todos
  */
 export const fetchTodos = async (): Promise<Todo[]> => {
-  return fetchWithoutAuth(`${API_BASE_URL}/todos`);
+  return fetchWithAuth(`${API_BASE_URL}/todos`);
 };
 
 /**
  * Create a new todo
- * FIXED: Using query params instead of JSON body
  */
 export const createTodo = async (title: string, description?: string): Promise<Todo> => {
-
-  const url = new URL(`${API_BASE_URL}/todos`);
-
-  url.searchParams.append("title", title);
-
-  if (description) {
-    url.searchParams.append("description", description);
-  }
-
-  return fetchWithoutAuth(url.toString(), {
+  const params = new URLSearchParams({ title });
+  if (description) params.append('description', description);
+  
+  return fetchWithAuth(`${API_BASE_URL}/todos?${params.toString()}`, {
     method: 'POST'
   });
 };
 
 /**
  * Update todo
- * FIXED: Using query params instead of JSON body
  */
 export const updateTodo = async (
   id: number,
   title?: string,
   description?: string
 ): Promise<Todo> => {
-
-  const url = new URL(`${API_BASE_URL}/todos/${id}`);
-
-  if (title) url.searchParams.append("title", title);
-  if (description) url.searchParams.append("description", description);
-
-  return fetchWithoutAuth(url.toString(), {
+  const params = new URLSearchParams();
+  if (title) params.append('title', title);
+  if (description) params.append('description', description);
+  
+  const queryString = params.toString();
+  const url = queryString ? `${API_BASE_URL}/todos/${id}?${queryString}` : `${API_BASE_URL}/todos/${id}`;
+  
+  return fetchWithAuth(url, {
     method: 'PUT'
   });
 };
@@ -86,7 +93,7 @@ export const updateTodo = async (
  * Toggle completion
  */
 export const toggleTodoCompletion = async (id: number): Promise<Todo> => {
-  return fetchWithoutAuth(`${API_BASE_URL}/todos/${id}/toggle`, {
+  return fetchWithAuth(`${API_BASE_URL}/todos/${id}/toggle`, {
     method: 'PATCH',
   });
 };
@@ -95,7 +102,7 @@ export const toggleTodoCompletion = async (id: number): Promise<Todo> => {
  * Delete todo
  */
 export const deleteTodo = async (id: number): Promise<void> => {
-  await fetchWithoutAuth(`${API_BASE_URL}/todos/${id}`, {
+  await fetchWithAuth(`${API_BASE_URL}/todos/${id}`, {
     method: 'DELETE'
   });
 };
