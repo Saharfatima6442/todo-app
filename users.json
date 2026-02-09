@@ -1,0 +1,10 @@
+{
+  "syedafatima@gmail.com": {
+    "id": "5454fcbf-c394-4d08-abf4-04f8c7cb9c1d",
+    "email": "syedafatima@gmail.com",
+    "password_hash": "$2b$12$dFKWhMr69WTEbW6Mw/OETOIiRaMI1/pwgsxWnEauTIPvhHukFNmh2",
+    "created_at": "2026-02-09T20:31:51.623937",
+    "updated_at": "2026-02-09T20:31:51.623937",
+    "is_active": true
+  }
+}

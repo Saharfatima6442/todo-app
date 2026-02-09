@@ -38,25 +38,51 @@ class AuthProvider {
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+      console.log('Attempting login to:', `${baseUrl}/api/auth/login`);
       const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),  // Changed to email instead of username
       });
 
+      console.log('Login response status:', response.status);
+      const responseText = await response.text();
+      console.log('Login response text:', responseText);
+
       if (response.ok) {
-        const data = await response.json();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          console.error('Error parsing login response:', e);
+          return { success: false, error: 'Invalid response format' };
+        }
+
         this.token = data.access_token;  // Changed from 'token' to 'access_token'
         this.currentUser = data.user;
         localStorage.setItem('jwt_token', this.token);
+        
+        console.log('Token set in localStorage:', this.token);
+        
+        // Dispatch a custom event to notify other parts of the app
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('authStatusChanged'));
+        }
+        
         return { success: true, user: this.currentUser };
       } else {
-        const error = await response.json();
-        return { success: false, error: error.detail || error.message };  // Changed to 'detail' for FastAPI errors
+        let error;
+        try {
+          error = JSON.parse(responseText);
+        } catch (e) {
+          error = { detail: responseText };
+        }
+        console.error('Login failed:', error);
+        return { success: false, error: error.detail || error.message || 'Login failed' };  // Changed to 'detail' for FastAPI errors
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: 'Network error' };
+      return { success: false, error: `Network error: ${error.message}` };
     }
   }
 

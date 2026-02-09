@@ -130,16 +130,9 @@ def delete_todo(todo_id: int, current_user: UserResponse = Depends(get_current_u
     return {"message": "Todo deleted successfully"}
 
 
-# DISABLED: Chatbot module - commented out for stable baseline
-'''
-@app.post("/api/{user_id}/chat")
-async def chat_endpoint(user_id: str, request: dict):
-    """
-    Chat endpoint that handles user messages and returns AI responses
-    """
-    # This endpoint is disabled in the stable baseline
-    raise HTTPException(status_code=501, detail="Chat functionality is disabled in stable baseline")
-'''
+# Include the chat router
+from src.api.v1.endpoints.chat import router as chat_router
+app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
 
 if __name__ == "__main__":
     import uvicorn

@@ -10,11 +10,13 @@ import * as todoService from '@/lib/todo-service';
 import { Todo } from '@/types/todo';
 import { authProvider } from '@/auth/auth_provider';
 import { useRouter } from 'next/navigation';
+import ChatComponent from '@/components/chat-component';
 
 const TodoPage = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -28,19 +30,42 @@ const TodoPage = () => {
   // Check authentication status on initial render
   useEffect(() => {
     const checkAuth = async () => {
+      // Initialize auth provider
       await authProvider.init();
       const authenticated = authProvider.isAuthenticated();
-      
+      setIsAuthenticated(authenticated);
+
+      // Only redirect if not authenticated and not already on auth page
       if (!authenticated) {
         router.push('/auth');
         return;
       }
-      
+
       loadTodos();
     };
-    
+
     checkAuth();
-  }, []);
+  }, [router]);
+
+  // Listen for authentication status changes
+  useEffect(() => {
+    const handleAuthStatusChange = () => {
+      const authenticated = authProvider.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      if (authenticated) {
+        loadTodos();
+      } else {
+        router.push('/auth');
+      }
+    };
+
+    window.addEventListener('authStatusChanged', handleAuthStatusChange);
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('authStatusChanged', handleAuthStatusChange);
+    };
+  }, [router]);
 
   const loadTodos = async () => {
     setLoading(true);
@@ -113,118 +138,153 @@ const TodoPage = () => {
     );
   }
 
+  // If not authenticated, show a redirecting message
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Redirecting to login...</div>
+      </div>
+    );
+  }
+
+  // Get current user ID for the chat component
+  const currentUser = authProvider.getCurrentUser();
+
   // Main Todo UI (with authentication)
   return (
-    <div className="container mx-auto py-10 max-w-4xl">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Todo Application</CardTitle>
-            <CardDescription>Manage your tasks securely with authentication</CardDescription>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-green-600">✓ Signed in</span>
-            <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{error}</div>}
+    <div className="container mx-auto py-10 max-w-6xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Todo Application</CardTitle>
+                <CardDescription>Manage your tasks securely with authentication</CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-green-600">✓ Signed in</span>
+                <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{error}</div>}
 
-          {/* Add Todo */}
-          <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
-              <Input 
-                placeholder="Todo title" 
-                value={newTodoTitle} 
-                onChange={e => setNewTodoTitle(e.target.value)} 
-                onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
-              />
-            </div>
-            <div className="md:col-span-1">
-              <Input 
-                placeholder="Description (optional)" 
-                value={newTodoDescription} 
-                onChange={e => setNewTodoDescription(e.target.value)} 
-              />
-            </div>
-            <div className="md:col-span-1 flex items-end">
-              <Button onClick={handleAddTodo} className="w-full">Add Todo</Button>
-            </div>
-          </div>
+              {/* Add Todo */}
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-2">
+                  <Input 
+                    placeholder="Todo title" 
+                    value={newTodoTitle} 
+                    onChange={e => setNewTodoTitle(e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <Input 
+                    placeholder="Description (optional)" 
+                    value={newTodoDescription} 
+                    onChange={e => setNewTodoDescription(e.target.value)} 
+                  />
+                </div>
+                <div className="md:col-span-1 flex items-end">
+                  <Button onClick={handleAddTodo} className="w-full">Add Todo</Button>
+                </div>
+              </div>
 
-          {/* Todo List */}
-          {todos.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No todos yet!</p>
-          ) : (
-            <div className="space-y-3">
-              {todos.map(todo => (
-                <Card key={todo.id} className="p-4">
-                  <div className="flex items-center space-x-4">
-                    <Checkbox 
-                      id={`complete-${todo.id}`} 
-                      checked={todo.completed} 
-                      onCheckedChange={() => handleToggleCompletion(todo.id)} 
-                    />
-                    <div className="flex-1">
-                      <div className={`font-medium ${todo.completed ? 'line-through text-gray-500' : ''}`}>{todo.title}</div>
-                      {todo.description && <div className={`text-sm ${todo.completed ? 'line-through text-gray-500' : 'text-gray-600'}`}>{todo.description}</div>}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
+              {/* Todo List */}
+              {todos.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No todos yet!</p>
+              ) : (
+                <div className="space-y-3">
+                  {todos.map(todo => (
+                    <Card key={todo.id} className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <Checkbox 
+                          id={`complete-${todo.id}`} 
+                          checked={todo.completed} 
+                          onCheckedChange={() => handleToggleCompletion(todo.id)} 
+                        />
+                        <div className="flex-1">
+                          <div className={`font-medium ${todo.completed ? 'line-through text-gray-500' : ''}`}>{todo.title}</div>
+                          {todo.description && <div className={`text-sm ${todo.completed ? 'line-through text-gray-500' : 'text-gray-600'}`}>{todo.description}</div>}
+                        </div>
+                        <div className="flex space-x-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => { 
+                                  setEditingTodo(todo); 
+                                  setEditTitle(todo.title); 
+                                  setEditDescription(todo.description || ''); 
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>Edit Todo</DialogTitle>
+                                <DialogDescription>Edit your todo and click save.</DialogDescription>
+                              </DialogHeader>
+                              <div className="grid gap-4 py-4">
+                                <Input 
+                                  value={editTitle} 
+                                  onChange={e => setEditTitle(e.target.value)} 
+                                  placeholder="Todo title"
+                                />
+                                <Input 
+                                  value={editDescription} 
+                                  onChange={e => setEditDescription(e.target.value)} 
+                                  placeholder="Description (optional)"
+                                />
+                              </div>
+                              <DialogFooter>
+                                <Button onClick={handleUpdateTodo}>Save changes</Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
                           <Button 
-                            variant="outline" 
+                            variant="destructive" 
                             size="sm" 
-                            onClick={() => { 
-                              setEditingTodo(todo); 
-                              setEditTitle(todo.title); 
-                              setEditDescription(todo.description || ''); 
-                            }}
+                            onClick={() => handleDelete(todo.id)}
                           >
-                            Edit
+                            Delete
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
-                          <DialogHeader>
-                            <DialogTitle>Edit Todo</DialogTitle>
-                            <DialogDescription>Edit your todo and click save.</DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <Input 
-                              value={editTitle} 
-                              onChange={e => setEditTitle(e.target.value)} 
-                              placeholder="Todo title"
-                            />
-                            <Input 
-                              value={editDescription} 
-                              onChange={e => setEditDescription(e.target.value)} 
-                              placeholder="Description (optional)"
-                            />
-                          </div>
-                          <DialogFooter>
-                            <Button onClick={handleUpdateTodo}>Save changes</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={() => handleDelete(todo.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <div>{todos.filter(t => t.completed).length} of {todos.length} completed</div>
+              <Button variant="outline" onClick={loadTodos}>Refresh</Button>
+            </CardFooter>
+          </Card>
+        </div>
+        
+        {/* Chat Component */}
+        <div className="lg:col-span-1">
+          {currentUser ? (
+            <ChatComponent userId={currentUser.id} />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="h-5 w-5 bg-gray-200 rounded animate-pulse"></span>
+                  AI Assistant
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-500">Loading chat...</p>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div>{todos.filter(t => t.completed).length} of {todos.length} completed</div>
-          <Button variant="outline" onClick={loadTodos}>Refresh</Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

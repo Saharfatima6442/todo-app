@@ -23,19 +23,23 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
+      console.log('Attempting to login with email:', loginEmail);
       const result = await authProvider.login(loginEmail, loginPassword);
-      
+      console.log('Login result:', result);
+
       if (result.success) {
-        router.push('/'); // Redirect to home after login
-        router.refresh(); // Refresh the page to update UI
+        console.log('Login successful, redirecting to home...');
+        // Force a full page navigation to ensure proper initialization
+        window.location.replace('/');
       } else {
+        console.log('Login failed with error:', result.error);
         setError(result.error || 'Login failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
-      console.error(err);
+      console.error('Login error caught:', err);
+      setError('An unexpected error occurred: ' + (err.message || err));
     } finally {
       setLoading(false);
     }
@@ -45,19 +49,23 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
+      console.log('Attempting to register with email:', registerEmail);
       const result = await authProvider.register(registerEmail, registerPassword);
-      
+      console.log('Registration result:', result);
+
       if (result.success) {
-        router.push('/'); // Redirect to home after registration
-        router.refresh(); // Refresh the page to update UI
+        console.log('Registration successful, redirecting to home...');
+        // Force a full page navigation to ensure proper initialization
+        window.location.replace('/');
       } else {
+        console.log('Registration failed with error:', result.error);
         setError(result.error || 'Registration failed');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
-      console.error(err);
+      console.error('Registration error caught:', err);
+      setError('An unexpected error occurred: ' + (err.message || err));
     } finally {
       setLoading(false);
     }
